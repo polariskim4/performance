@@ -22,8 +22,8 @@ def get_stock_data(ticker: str, start_date_str: str, end_date_str: str) -> pd.Se
         if data.empty:
             return None
         
-        # 인덱스를 datetime 형식으로 변환하고, 지정된 날짜 범위로 데이터를 필터링합니다.
-        data.index = pd.to_datetime(data.index)
+        # 인덱스를 datetime 형식으로 변환하고 시간대(timezone) 정보를 제거하여 비교 오류를 방지합니다.
+        data.index = pd.to_datetime(data.index).tz_localize(None)
         
         start_date = pd.to_datetime(start_date_str)
         end_date = pd.to_datetime(end_date_str)
@@ -32,7 +32,9 @@ def get_stock_data(ticker: str, start_date_str: str, end_date_str: str) -> pd.Se
         
         if data.empty:
             return None
-        return data['Adj Close'] # 수정 종가(Adj Close)만 반환합니다.
+            
+        # yfinance.history()에서는 'Close'가 이미 수정 종가 역할을 합니다.
+        return data['Close']
     except Exception as e:
         st.error(f"데이터를 가져오는 중 오류가 발생했습니다. 티커 '{ticker}'를 확인하거나 잠시 후 다시 시도해주세요. 오류: {e}")
         return None
@@ -164,4 +166,3 @@ if ticker_input:
 
 st.markdown("---")
 st.markdown("Powered by `yfinance` and `Streamlit`")
-
